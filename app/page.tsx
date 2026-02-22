@@ -1,65 +1,438 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import data from "@/result.json";
 import Image from "next/image";
 
-export default function Home() {
+const ITEMS_PER_PAGE = 30;
+
+const scrollbarStyles = `
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f3f4f6;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #2aa6b3;
+    border-radius: 5px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #1a8a99;
+  }
+
+  @keyframes scroll-text {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .running-text {
+    animation: scroll-text 15s linear infinite;
+    white-space: nowrap;
+  }
+`;
+
+export default function Dashboard() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedSession, setSelectedSession] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [seatNo, setSeatNo] = useState("");
+  const [motherName, setMotherName] = useState("");
+  const [captchaText, setCaptchaText] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState("");
+
+  // Parse the data: skip the header row and convert C values to readable dates
+  const rows = useMemo(() => {
+    return data.slice(1).map((item: any) => ({
+      id: item.A,
+      course: item.B,
+      resultDate: convertExcelDate(parseInt(item.C)),
+    }));
+  }, []);
+
+  // Filter rows based on session and search term
+  const filteredRows = useMemo(() => {
+    return rows.filter((row) => {
+      const matchesSearch = row.course
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      return matchesSearch;
+    });
+  }, [rows, searchTerm]);
+
+  // Convert Excel serial date to readable format
+  function convertExcelDate(excelDate: number) {
+    const date = new Date((excelDate - 25569) * 86400 * 1000);
+    return date.toLocaleDateString("en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  // Calculate pagination based on filtered rows
+  const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedRows = filteredRows.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
+
+  // Reset to page 1 when search/filter changes
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleSessionChange = (value: string) => {
+    setSelectedSession(value);
+    setCurrentPage(1);
+  };
+
+  const handlePrevious = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNext = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePageClick = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const openResultPopup = (courseName: string) => {
+    setSelectedCourse(courseName);
+    setSeatNo("");
+    setMotherName("");
+    setCaptchaText("");
+    setIsPopupOpen(true);
+  };
+
+  const closeResultPopup = () => {
+    setIsPopupOpen(false);
+  };
+
+  const handleCheckResult = () => {
+    if (!seatNo || !motherName || !captchaText) {
+      alert("Please fill all fields");
+      return;
+    }
+    // Add your result checking logic here
+    console.log("Checking result for:", { seatNo, motherName, captchaText });
+    alert("Result checked for Seat No: " + seatNo);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+    <>
+      <style>{scrollbarStyles}</style>
+      <div className="flex min-h-screen bg-gray-100 font-sans">
+        {/* Sidebar */}
+        <aside
+          className={`${sidebarOpen ? "w-60" : "w-20"} bg-[#2f3e46] text-white transition-all duration-300 overflow-hidden`}
+        >
+          <div className="h-14 flex items-center border-b border-gray-600 font-semibold bg-[#2f3e46] text-white gap-3 px-3">
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              src="/image.png"
+              alt="SPPU Logo"
+              width={40}
+              height={40}
+              className="h-10 w-12 rounded-full object-cover shrink-0"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div className="flex-1 overflow-hidden h-full flex items-center">
+              <div className="running-text whitespace-nowrap">
+                Online Result Display System
+              </div>
+            </div>
+          </div>
+          <div
+            onClick={() => setActiveTab("dashboard")}
+            className={`p-4 text-sm cursor-pointer transition ${
+              activeTab === "dashboard"
+                ? "bg-[#117A65]  "
+                : "hover:bg-[#3c4f57]"
+            } ${sidebarOpen ? "" : "flex justify-center"}`}
           >
-            Documentation
-          </a>
+            <span>📊</span>
+            {sidebarOpen && <span className="ml-2">Dashboard</span>}
+          </div>
+          <div
+            onClick={() => setActiveTab("home")}
+            className={`p-4 text-sm cursor-pointer transition ${
+              activeTab === "home"
+                ? "bg-[#2aa6b3] border-l-4 border-l-white"
+                : "hover:bg-[#3c4f57]"
+            } ${sidebarOpen ? "" : "flex justify-center"}`}
+          >
+            <span>🏠</span>
+            {sidebarOpen && <span className="ml-2">Home</span>}
+          </div>
+        </aside>
+
+        {/* Main */}
+        <div className="flex-1">
+          {/* Top Header */}
+          <header className="h-14 bg-[#e5e5e5] flex items-center px-6 shadow-sm gap-4">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="text-lg text-black hover:text-[#2aa6b3] transition"
+            >
+              ☰
+            </button>
+            <span className="text-lg font-medium text-gray-600">
+              Online Result Display System
+            </span>
+          </header>
+
+          {/* Dashboard Card */}
+          <div className="p-6">
+            <div className="bg-white shadow-2xl rounded-sm border-t-4 border-t-[#23B0C4] ">
+              <div className="sticky top-0 text-center bg-[#EBEBEB] shadow-2xl text-black py-3 font-semibold z-10 border-b border-gray-300">
+                Dashboard
+              </div>
+
+              {/* Filter Section */}
+              <div className="px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between">
+                <div className="flex flex-col items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Select Session:
+                  </label>
+                  <select
+                    value={selectedSession}
+                    onChange={(e) => handleSessionChange(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded text-[11px] bg-white text-gray-700 focus:outline-none focus:border-[#2aa6b3] transition w-72 h-8 font-light"
+                  >
+                    <option value="all">-- Select --</option>
+                    <option value="2024">APR/MAY-2025</option>
+                    <option value="2025">OCT/NOV-2025</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-black"> Search:</span>
+
+                  <input
+                    type="text"
+                    placeholder=""
+                    value={searchTerm}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className=" border-2 border-black  text-sm bg-white text-gray-700 placeholder-gray-500 focus:outline-none focus:border-[#2aa6b3] transition w-48 h-6"
+                  />
+                </div>
+              </div>
+
+              <div
+                className="max-h-96 overflow-y-auto custom-scrollbar"
+                style={{
+                  scrollbarColor: "#2aa6b3 #f3f4f6",
+                  scrollbarWidth: "thin",
+                }}
+              >
+                <table
+                  className="w-full mt-2 text-sm shadow-xl"
+                  style={{
+                    boxShadow:
+                      "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)",
+                  }}
+                >
+                  <thead>
+                    <tr className="bg-[#2aa6b3] text-white text-center">
+                      <th className="px-4 py-3 w-16 border-r border-r-white">
+                        Sr.No.
+                      </th>
+                      <th className="px-4 py-3 border-r border-r-white">
+                        Course Name
+                      </th>
+                      <th className="px-4 py-3 w-52 border-r border-r-white">
+                        Result Date
+                      </th>
+                      <th className="px-4 py-3 w-48 text-center"></th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {paginatedRows.map((row, index) => (
+                      <tr
+                        key={row.id}
+                        className={`${
+                          index % 2 === 0 ? "bg-gray-50" : "bg-gray-200"
+                        }`}
+                      >
+                        <td className="px-4 py-3 border-t border-t-white border-r border-r-white text-neutral-950">
+                          {row.id}
+                        </td>
+                        <td className="px-4 py-3 border-t border-t-white border-r border-r-white text-neutral-950">
+                          {row.course}
+                        </td>
+                        <td className="px-4 py-3 border-t border-t-white border-r border-r-white text-neutral-950">
+                          {row.resultDate}
+                        </td>
+                        <td className="px-4 py-3 border-t border-t-white text-center text-neutral-950">
+                          <button
+                            onClick={() => openResultPopup(row.course)}
+                            className="border border-[#2aa6b3] text-[#2aa6b3] px-4 py-1 rounded hover:bg-[#2aa6b3] hover:text-white transition text-sm"
+                          >
+                            Go for Result
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="h-1 bg-[#2aa6b3]"></div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t">
+                <div className="text-sm text-gray-600">
+                  Showing {startIndex + 1} to{" "}
+                  {Math.min(startIndex + ITEMS_PER_PAGE, filteredRows.length)}{" "}
+                  of {filteredRows.length} results
+                </div>
+
+                <div className="flex gap-2 items-center">
+                  <button
+                    onClick={handlePrevious}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border border-[#2aa6b3] text-[#2aa6b3] rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2aa6b3] hover:text-white transition text-sm"
+                  >
+                    Previous
+                  </button>
+
+                  <div className="flex gap-1">
+                    {(() => {
+                      const pageGroup = Math.floor((currentPage - 1) / 2);
+                      const startPage = pageGroup * 2 + 1;
+                      const endPage = Math.min(startPage + 1, totalPages);
+                      const visiblePages = [];
+                      for (let i = startPage; i <= endPage; i++) {
+                        visiblePages.push(i);
+                      }
+                      return visiblePages.map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageClick(page)}
+                          className={`px-3 py-1 rounded text-sm transition ${
+                            currentPage === page
+                              ? "bg-[#2aa6b3] text-white"
+                              : "border border-[#2aa6b3] text-[#2aa6b3] hover:bg-[#2aa6b3] hover:text-white"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ));
+                    })()}
+                  </div>
+
+                  <button
+                    onClick={handleNext}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border border-[#2aa6b3] text-[#2aa6b3] rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2aa6b3] hover:text-white transition text-sm"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-600 mt-6">
+              Copyright © 2026 Savitribai Phule Pune University. All rights
+              reserved.
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+
+      {/* Result Popup Modal */}
+      {isPopupOpen && (
+        <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50 ">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-6xl w-full mx-4">
+            <div className="flex justify-between items-center mb-6 pb-6 border-b border-gray-200">
+              <h2 className="text-md font-semibold text-gray-800">
+                {selectedCourse || "Course"} - Enter Details
+              </h2>
+              <button
+                onClick={closeResultPopup}
+                className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Enter Seat No
+                  </label>
+                  <input
+                    type="text"
+                    value={seatNo}
+                    onChange={(e) => setSeatNo(e.target.value)}
+                    placeholder=""
+                    className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#2aa6b3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Enter Mother Name
+                  </label>
+                  <input
+                    type="text"
+                    value={motherName}
+                    onChange={(e) => setMotherName(e.target.value)}
+                    placeholder=""
+                    className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#2aa6b3]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center justify-center py-8 border-t border-b border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-4">
+                  Enter captcha text as shown in image{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="bg-gray-200 px-6 py-4 rounded font-mono text-2xl font-bold">
+                    41682
+                  </div>
+                  <button className="text-[#2aa6b3] hover:text-[#1a8a99] font-medium text-sm">
+                    Refresh Captcha
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={captchaText}
+                  onChange={(e) => setCaptchaText(e.target.value)}
+                  placeholder="Enter Captcha Text"
+                  className="w-80 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#2aa6b3] text-center text-black"
+                />
+              </div>
+
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={handleCheckResult}
+                  className="px-8 py-2 bg-[#2aa6b3] text-white rounded border border-[#2aa6b3] hover:bg-[#1a8a99] transition font-medium"
+                >
+                  Check Result
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
