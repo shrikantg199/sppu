@@ -1,11 +1,11 @@
 "use client";
-
 import { useState, useMemo } from "react";
 import data from "../result.json";
 import Image from "next/image";
+import { House, User } from "lucide-react";
 
 const ITEMS_PER_PAGE = 30;
-
+const CAPTCHA_LENGTH = 6;
 const scrollbarStyles = `
   .custom-scrollbar::-webkit-scrollbar {
     width: 10px;
@@ -41,7 +41,7 @@ const scrollbarStyles = `
 
 export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedSession, setSelectedSession] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,7 +49,15 @@ export default function Dashboard() {
   const [seatNo, setSeatNo] = useState("");
   const [motherName, setMotherName] = useState("");
   const [captchaText, setCaptchaText] = useState("");
+  const [generatedCaptcha, setGeneratedCaptcha] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
+
+  const generateCaptcha = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    return Array.from({ length: CAPTCHA_LENGTH }, () =>
+      chars.charAt(Math.floor(Math.random() * chars.length)),
+    ).join("");
+  };
 
   // Parse the data: skip the header row and convert C values to readable dates
   const rows = useMemo(() => {
@@ -116,6 +124,7 @@ export default function Dashboard() {
     setSeatNo("");
     setMotherName("");
     setCaptchaText("");
+    setGeneratedCaptcha(generateCaptcha());
     setIsPopupOpen(true);
   };
 
@@ -123,9 +132,19 @@ export default function Dashboard() {
     setIsPopupOpen(false);
   };
 
+  const refreshCaptcha = () => {
+    setGeneratedCaptcha(generateCaptcha());
+    setCaptchaText("");
+  };
+
   const handleCheckResult = () => {
     if (!seatNo || !motherName || !captchaText) {
       alert("Please fill all fields");
+      return;
+    }
+    if (captchaText.trim().toUpperCase() !== generatedCaptcha) {
+      alert("Invalid captcha. Please try again.");
+      refreshCaptcha();
       return;
     }
     // Add your result checking logic here
@@ -137,9 +156,22 @@ export default function Dashboard() {
     <>
       <style>{scrollbarStyles}</style>
       <div className="flex min-h-screen bg-gray-100 font-sans">
+        {sidebarOpen && (
+          <button
+            type="button"
+            aria-label="Close sidebar overlay"
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 z-20 bg-black/30 md:hidden"
+          />
+        )}
+
         {/* Sidebar */}
         <aside
-          className={`${sidebarOpen ? "w-60" : "w-20"} bg-[#2f3e46] text-white transition-all duration-300 overflow-hidden`}
+          className={`fixed inset-y-0 left-0 z-30 bg-[#2f3e46] text-white transition-all duration-300 overflow-hidden md:static md:inset-auto ${
+            sidebarOpen
+              ? "translate-x-0 w-60"
+              : "-translate-x-full w-60 md:w-20 md:translate-x-0"
+          }`}
         >
           <div className="h-14 flex items-center border-b border-gray-600 font-semibold bg-[#2f3e46] text-white gap-3 px-3">
             <Image
@@ -156,61 +188,71 @@ export default function Dashboard() {
             </div>
           </div>
           <div
-            onClick={() => setActiveTab("dashboard")}
-            className={`p-4 text-sm cursor-pointer transition ${
+            onClick={() => {
+              setActiveTab("dashboard");
+              setSidebarOpen(false);
+            }}
+            className={`p-4 text-sm cursor-pointer transition  ${
               activeTab === "dashboard"
-                ? "bg-[#117A65]  "
+                ? "bg-[#117A65]  rounded-md "
                 : "hover:bg-[#3c4f57]"
             } ${sidebarOpen ? "" : "flex justify-center"}`}
           >
-            <span>📊</span>
-            {sidebarOpen && <span className="ml-2">Dashboard</span>}
+            <div className="flex items-center">
+              <User />
+              {sidebarOpen && <span className="ml-2">Dashboard</span>}
+            </div>
           </div>
           <div
-            onClick={() => setActiveTab("home")}
+            onClick={() => {
+              setActiveTab("home");
+              setSidebarOpen(false);
+            }}
             className={`p-4 text-sm cursor-pointer transition ${
               activeTab === "home"
-                ? "bg-[#2aa6b3] border-l-4 border-l-white"
+                ? "bg-[#2aa6b3] border-l-4 border-l-white rounded-md"
                 : "hover:bg-[#3c4f57]"
             } ${sidebarOpen ? "" : "flex justify-center"}`}
           >
-            <span>🏠</span>
-            {sidebarOpen && <span className="ml-2">Home</span>}
+            <div className="flex items-center">
+              <House />
+              {sidebarOpen && <span className="ml-2">Home</span>}
+            </div>
           </div>
         </aside>
 
         {/* Main */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* Top Header */}
-          <header className="h-14 bg-[#e5e5e5] flex items-center px-6 shadow-sm gap-4">
+          <header className="h-14 bg-[#e5e5e5] flex items-center px-4 sm:px-6 shadow-sm gap-3 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="text-lg text-black hover:text-[#2aa6b3] transition"
             >
               ☰
             </button>
-            <span className="text-lg font-medium text-gray-600">
+            <span className="text-sm sm:text-lg font-medium text-gray-600 leading-tight">
               Online Result Display System
             </span>
           </header>
 
           {/* Dashboard Card */}
-          <div className="p-6">
+          <div className="p-3 sm:p-6">
             <div className="bg-white shadow-2xl rounded-sm border-t-4 border-t-[#23B0C4] ">
               <div className="sticky top-0 text-center bg-[#EBEBEB] shadow-2xl text-black py-3 font-semibold z-10 border-b border-gray-300">
                 Dashboard
               </div>
 
               {/* Filter Section */}
-              <div className="px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between">
-                <div className="flex flex-col items-center gap-2">
+              <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200 flex flex-col lg:flex-row lg:items-center gap-4 lg:justify-between">
+                <div className="flex flex-col items-start sm:items-center gap-2">
                   <label className="text-sm font-medium text-gray-700">
                     Select Session:
                   </label>
                   <select
                     value={selectedSession}
                     onChange={(e) => handleSessionChange(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded text-[11px] bg-white text-gray-700 focus:outline-none focus:border-[#2aa6b3] transition w-72 h-8 font-light"
+                    className="px-3 py-2 border border-gray-300 rounded text-[11px] bg-white text-gray-700 focus:outline-none focus:border-[#2aa6b3] transition w-full sm:w-72 h-8 font-light"
                   >
                     <option value="all">-- Select --</option>
                     <option value="2024">APR/MAY-2025</option>
@@ -218,7 +260,7 @@ export default function Dashboard() {
                   </select>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
                   <span className="text-black"> Search:</span>
 
                   <input
@@ -226,20 +268,20 @@ export default function Dashboard() {
                     placeholder=""
                     value={searchTerm}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className=" border-2 border-black  text-sm bg-white text-gray-700 placeholder-gray-500 focus:outline-none focus:border-[#2aa6b3] transition w-48 h-6"
+                    className=" border-2 border-black text-sm bg-white text-gray-700 placeholder-gray-500 focus:outline-none focus:border-[#2aa6b3] transition w-full sm:w-48 h-8 sm:h-6"
                   />
                 </div>
               </div>
 
               <div
-                className="max-h-96 overflow-y-auto custom-scrollbar"
+                className="max-h-96 overflow-y-auto overflow-x-auto custom-scrollbar"
                 style={{
                   scrollbarColor: "#2aa6b3 #f3f4f6",
                   scrollbarWidth: "thin",
                 }}
               >
                 <table
-                  className="w-full mt-2 text-sm shadow-xl"
+                  className="w-full min-w-[760px] mt-2 text-sm shadow-xl"
                   style={{
                     boxShadow:
                       "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)",
@@ -294,14 +336,14 @@ export default function Dashboard() {
               <div className="h-1 bg-[#2aa6b3]"></div>
 
               {/* Pagination Controls */}
-              <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-4 bg-gray-50 border-t gap-3">
                 <div className="text-sm text-gray-600">
                   Showing {startIndex + 1} to{" "}
                   {Math.min(startIndex + ITEMS_PER_PAGE, filteredRows.length)}{" "}
                   of {filteredRows.length} results
                 </div>
 
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-2 items-center flex-wrap">
                   <button
                     onClick={handlePrevious}
                     disabled={currentPage === 1}
@@ -356,10 +398,10 @@ export default function Dashboard() {
 
       {/* Result Popup Modal */}
       {isPopupOpen && (
-        <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50 ">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-6xl w-full mx-4">
-            <div className="flex justify-between items-center mb-6 pb-6 border-b border-gray-200">
-              <h2 className="text-md font-semibold text-gray-800">
+        <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-8 max-w-6xl w-full mx-0 sm:mx-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex justify-between items-start sm:items-center mb-6 pb-6 border-b border-gray-200 gap-3">
+              <h2 className="text-sm sm:text-md font-semibold text-gray-800 leading-snug">
                 {selectedCourse || "Course"} - Enter Details
               </h2>
               <button
@@ -371,7 +413,7 @@ export default function Dashboard() {
             </div>
 
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Enter Seat No
@@ -404,11 +446,70 @@ export default function Dashboard() {
                   Enter captcha text as shown in image{" "}
                   <span className="text-red-500">*</span>
                 </label>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="bg-gray-200 px-6 py-4 rounded font-mono text-2xl font-bold">
-                    41682
+                <div className="flex flex-col sm:flex-row items-center gap-4 mb-6 w-full">
+                  <div
+                    className="
+    relative
+    w-full max-w-[320px] h-[90px]
+    flex items-center justify-center
+    bg-[#e5e5e5]
+    overflow-hidden
+    select-none
+  "
+                  >
+                    {/* Grid */}
+                    <div
+                      className="
+      absolute inset-0 opacity-90
+      bg-[linear-gradient(#cfcfcf_1px,transparent_1px),linear-gradient(90deg,#cfcfcf_1px,transparent_1px)]
+      bg-[size:20px_20px]
+    "
+                    />
+
+                    {/* Noise */}
+                    <div
+                      className="
+      absolute inset-0 opacity-90
+      bg-[radial-gradient(black_1px,transparent_1px)]
+      bg-size-[18px_18px]
+    "
+                    />
+
+                    {/* Tilted Text */}
+                    <div className="relative z-10 flex gap-2">
+                      {generatedCaptcha.split("").map((char, index) => {
+                        const rotations = [-15, -10, -5, 5, 10, 15];
+                        const randomRotate =
+                          rotations[
+                            Math.floor(Math.random() * rotations.length)
+                          ];
+
+                        const randomY = Math.floor(Math.random() * 10) - 5;
+
+                        return (
+                          <span
+                            key={index}
+                            style={{
+                              transform: `rotate(${randomRotate}deg) translateY(${randomY}px)`,
+                            }}
+                            className="
+            inline-block
+            font-mono
+            text-[56px]
+            font-bold
+            text-black
+          "
+                          >
+                            {char}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <button className="text-[#2aa6b3] hover:text-[#1a8a99] font-medium text-sm">
+                  <button
+                    onClick={refreshCaptcha}
+                    className="text-[#2aa6b3] hover:text-[#1a8a99] font-medium text-sm"
+                  >
                     Refresh Captcha
                   </button>
                 </div>
@@ -417,7 +518,7 @@ export default function Dashboard() {
                   value={captchaText}
                   onChange={(e) => setCaptchaText(e.target.value)}
                   placeholder="Enter Captcha Text"
-                  className="w-80 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#2aa6b3] text-center text-black"
+                  className="w-full max-w-80 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#2aa6b3] text-center text-black"
                 />
               </div>
 
