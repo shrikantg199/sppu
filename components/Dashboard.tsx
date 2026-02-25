@@ -2,20 +2,15 @@
 import { useState, useMemo } from "react";
 import data from "../result.json";
 import Image from "next/image";
-<<<<<<< HEAD
 import { useRouter } from "next/navigation";
-
+import { User, House } from "lucide-react";
 const ITEMS_PER_PAGE = 30;
 const RESULT_PDF_PATH = "/result.pdf";
 const VALID_SEAT_NO = "T40088415";
 const VALID_MOTHER_NAME = "SHAILA RAMDAS WALUNJ";
 
-=======
-import { House, User } from "lucide-react";
-
-const ITEMS_PER_PAGE = 30;
 const CAPTCHA_LENGTH = 6;
->>>>>>> 8a5a08cb3ecfdf8a7ef95e0f256b7c83a6c81ff8
+
 const scrollbarStyles = `
   .custom-scrollbar::-webkit-scrollbar {
     width: 10px;
@@ -60,11 +55,9 @@ export default function Dashboard() {
   const [seatNo, setSeatNo] = useState("");
   const [motherName, setMotherName] = useState("");
   const [captchaText, setCaptchaText] = useState("");
-<<<<<<< HEAD
+
   const [captchaCode, setCaptchaCode] = useState("41682");
-=======
-  const [generatedCaptcha, setGeneratedCaptcha] = useState("");
->>>>>>> 8a5a08cb3ecfdf8a7ef95e0f256b7c83a6c81ff8
+
   const [selectedCourse, setSelectedCourse] = useState("");
   const [showResultCard, setShowResultCard] = useState(false);
 
@@ -140,12 +133,9 @@ export default function Dashboard() {
     setSeatNo("");
     setMotherName("");
     setCaptchaText("");
-<<<<<<< HEAD
+
     setShowResultCard(false);
     setCaptchaCode(generateCaptcha());
-=======
-    setGeneratedCaptcha(generateCaptcha());
->>>>>>> 8a5a08cb3ecfdf8a7ef95e0f256b7c83a6c81ff8
     setIsPopupOpen(true);
   };
 
@@ -154,16 +144,8 @@ export default function Dashboard() {
     setShowResultCard(false);
   };
 
-  const generateCaptcha = () =>
-    Math.floor(10000 + Math.random() * 90000).toString();
-
   const refreshCaptcha = () => {
     setCaptchaCode(generateCaptcha());
-    setCaptchaText("");
-  };
-
-  const refreshCaptcha = () => {
-    setGeneratedCaptcha(generateCaptcha());
     setCaptchaText("");
   };
 
@@ -172,8 +154,6 @@ export default function Dashboard() {
       alert("Please fill all fields");
       return;
     }
-<<<<<<< HEAD
-
     const normalizedSeatNo = seatNo.trim().toUpperCase();
     const normalizedMotherName = motherName.trim().toUpperCase();
     if (
@@ -184,7 +164,7 @@ export default function Dashboard() {
       return;
     }
 
-    if (captchaText.trim() !== captchaCode) {
+    if (captchaText.trim().toUpperCase() !== captchaCode.toUpperCase()) {
       alert("Invalid captcha text");
       refreshCaptcha();
       return;
@@ -192,16 +172,6 @@ export default function Dashboard() {
 
     setIsPopupOpen(false);
     router.push("/result");
-=======
-    if (captchaText.trim().toUpperCase() !== generatedCaptcha) {
-      alert("Invalid captcha. Please try again.");
-      refreshCaptcha();
-      return;
-    }
-    // Add your result checking logic here
-    console.log("Checking result for:", { seatNo, motherName, captchaText });
-    alert("Result checked for Seat No: " + seatNo);
->>>>>>> 8a5a08cb3ecfdf8a7ef95e0f256b7c83a6c81ff8
   };
 
   return (
@@ -320,7 +290,7 @@ export default function Dashboard() {
                     placeholder=""
                     value={searchTerm}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className=" border-2 border-black text-sm bg-white text-gray-700 placeholder-gray-500 focus:outline-none focus:border-[#2aa6b3] transition w-full sm:w-48 h-8 sm:h-6"
+                    className=" border-2 border-black text-sm bg-white text-black placeholder-gray-500 focus:outline-none focus:border-[#2aa6b3] transition w-full sm:w-48 h-8 sm:h-6"
                   />
                 </div>
               </div>
@@ -450,7 +420,6 @@ export default function Dashboard() {
 
       {/* Result Popup Modal */}
       {isPopupOpen && (
-<<<<<<< HEAD
         <div
           className={`fixed inset-0 z-50 ${showResultCard ? "bg-white" : "bg-black/10 flex items-center justify-center"}`}
         >
@@ -469,12 +438,6 @@ export default function Dashboard() {
               }
             >
               <h2 className="text-md font-semibold text-gray-800">
-=======
-        <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50 p-3 sm:p-4">
-          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-8 max-w-6xl w-full mx-0 sm:mx-4 max-h-[92vh] overflow-y-auto">
-            <div className="flex justify-between items-start sm:items-center mb-6 pb-6 border-b border-gray-200 gap-3">
-              <h2 className="text-sm sm:text-md font-semibold text-gray-800 leading-snug">
->>>>>>> 8a5a08cb3ecfdf8a7ef95e0f256b7c83a6c81ff8
                 {selectedCourse || "Course"} - Enter Details
               </h2>
               <button
@@ -485,7 +448,6 @@ export default function Dashboard() {
               </button>
             </div>
 
-<<<<<<< HEAD
             {!showResultCard ? (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-6">
@@ -498,7 +460,7 @@ export default function Dashboard() {
                       value={seatNo}
                       onChange={(e) => setSeatNo(e.target.value)}
                       placeholder=""
-                      className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#2aa6b3]"
+                      className="w-full px-4 py-2 border border-gray-300 rounded text-black focus:outline-none focus:border-[#2aa6b3]"
                     />
                   </div>
 
@@ -511,7 +473,7 @@ export default function Dashboard() {
                       value={motherName}
                       onChange={(e) => setMotherName(e.target.value)}
                       placeholder=""
-                      className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#2aa6b3]"
+                      className="w-full px-4 py-2 border border-gray-300 rounded text-black focus:outline-none focus:border-[#2aa6b3]"
                     />
                   </div>
                 </div>
@@ -522,7 +484,7 @@ export default function Dashboard() {
                     <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="bg-gray-200 px-6 py-4 rounded font-mono text-2xl font-bold">
+                    <div className="bg-gray-200 px-6 py-4 rounded font-mono text-2xl font-bold text-black">
                       {captchaCode}
                     </div>
                     <button
@@ -556,115 +518,6 @@ export default function Dashboard() {
                   title="Result PDF"
                   src={RESULT_PDF_PATH}
                   className="w-full h-full"
-=======
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Enter Seat No
-                  </label>
-                  <input
-                    type="text"
-                    value={seatNo}
-                    onChange={(e) => setSeatNo(e.target.value)}
-                    placeholder=""
-                    className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#2aa6b3]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Enter Mother Name
-                  </label>
-                  <input
-                    type="text"
-                    value={motherName}
-                    onChange={(e) => setMotherName(e.target.value)}
-                    placeholder=""
-                    className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#2aa6b3]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col items-center justify-center py-8 border-t border-b border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-4">
-                  Enter captcha text as shown in image{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="flex flex-col sm:flex-row items-center gap-4 mb-6 w-full">
-                  <div
-                    className="
-    relative
-    w-full max-w-[320px] h-[90px]
-    flex items-center justify-center
-    bg-[#e5e5e5]
-    overflow-hidden
-    select-none
-  "
-                  >
-                    {/* Grid */}
-                    <div
-                      className="
-      absolute inset-0 opacity-90
-      bg-[linear-gradient(#cfcfcf_1px,transparent_1px),linear-gradient(90deg,#cfcfcf_1px,transparent_1px)]
-      bg-[size:20px_20px]
-    "
-                    />
-
-                    {/* Noise */}
-                    <div
-                      className="
-      absolute inset-0 opacity-90
-      bg-[radial-gradient(black_1px,transparent_1px)]
-      bg-size-[18px_18px]
-    "
-                    />
-
-                    {/* Tilted Text */}
-                    <div className="relative z-10 flex gap-2">
-                      {generatedCaptcha.split("").map((char, index) => {
-                        const rotations = [-15, -10, -5, 5, 10, 15];
-                        const randomRotate =
-                          rotations[
-                            Math.floor(Math.random() * rotations.length)
-                          ];
-
-                        const randomY = Math.floor(Math.random() * 10) - 5;
-
-                        return (
-                          <span
-                            key={index}
-                            style={{
-                              transform: `rotate(${randomRotate}deg) translateY(${randomY}px)`,
-                            }}
-                            className="
-            inline-block
-            font-mono
-            text-[56px]
-            font-bold
-            text-black
-          "
-                          >
-                            {char}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <button
-                    onClick={refreshCaptcha}
-                    className="text-[#2aa6b3] hover:text-[#1a8a99] font-medium text-sm"
-                  >
-                    Refresh Captcha
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  value={captchaText}
-                  onChange={(e) => setCaptchaText(e.target.value)}
-                  placeholder="Enter Captcha Text"
-                  className="w-full max-w-80 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#2aa6b3] text-center text-black"
->>>>>>> 8a5a08cb3ecfdf8a7ef95e0f256b7c83a6c81ff8
                 />
               </div>
             )}
