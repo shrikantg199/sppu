@@ -90,9 +90,9 @@ export default function Dashboard() {
   // Convert Excel serial date to readable format
   function convertExcelDate(excelDate: number) {
     const date = new Date((excelDate - 25569) * 86400 * 1000);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString("en-GB", {
       day: "2-digit",
-      month: "short",
+      month: "2-digit",
       year: "numeric",
     });
   }
