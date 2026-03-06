@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { User, House } from "lucide-react";
 const ITEMS_PER_PAGE = 30;
 const RESULT_PDF_PATH = "/result.pdf";
-const VALID_SEAT_NO = "T40088415";
+const VALID_SEAT_NO = "T400880415";
 const VALID_MOTHER_NAME = "SHAILA RAMDAS WALUNJ";
 
 const CAPTCHA_LENGTH = 6;
